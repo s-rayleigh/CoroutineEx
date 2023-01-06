@@ -325,5 +325,75 @@ namespace Rayleigh.CoroutineEx.Tests
             Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Canceled));
             Assert.That(task.Exception, Is.Null);
         }
+
+        [UnityTest]
+        public IEnumerator CompletedTask()
+        {
+            var task = CoroutineTask.CompletedTask;
+            
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.RanToCompletion));
+            Assert.That(task.Exception, Is.Null);
+            
+            yield return task;
+        }
+
+        [UnityTest]
+        public IEnumerator FromCancelled()
+        {
+            var task = CoroutineTask.FromCancelled();
+            
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(task.Exception, Is.Null);
+            
+            yield return task;
+        }
+
+        [UnityTest]
+        public IEnumerator FromCancelledGeneric()
+        {
+            var task = CoroutineTask.FromCancelled<int>();
+            
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(task.Exception, Is.Null);
+            
+            yield return task;
+        }
+
+        [UnityTest]
+        public IEnumerator FromException()
+        {
+            var exception = new Exception();
+            var task = CoroutineTask.FromException(exception);
+
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Faulted));
+            Assert.That(task.Exception, Is.EqualTo(exception));
+            
+            yield return task;
+        }
+        
+        [UnityTest]
+        public IEnumerator FromExceptionGeneric()
+        {
+            var exception = new Exception();
+            var task = CoroutineTask.FromException<int>(exception);
+
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Faulted));
+            Assert.That(task.Exception, Is.EqualTo(exception));
+            
+            yield return task;
+        }
+
+        [UnityTest]
+        public IEnumerator FromResult()
+        {
+            const int result = 13;
+            var task = CoroutineTask.FromResult(result);
+            
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.RanToCompletion));
+            Assert.That(task.Exception, Is.Null);
+            Assert.That(task.Result, Is.EqualTo(result));
+
+            yield return task;
+        }
     }
 }

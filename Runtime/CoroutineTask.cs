@@ -17,9 +17,9 @@ namespace Rayleigh.CoroutineEx
     {
         protected object coroutine;
 
-        public CoroutineTaskState State { get; protected set; }
+        public CoroutineTaskState State { get; internal set; }
 
-        public Exception Exception { get; private set; }
+        public Exception Exception { get; internal set; }
 
         public override bool keepWaiting => this.State is CoroutineTaskState.Created or CoroutineTaskState.Running;
 
@@ -83,6 +83,8 @@ namespace Rayleigh.CoroutineEx
 
         private readonly Sequence sequence;
 
+        protected CoroutineTaskBase() { }
+
         public CoroutineTaskBase(Sequence sequence)
         {
             this.sequence = sequence;
@@ -105,6 +107,8 @@ namespace Rayleigh.CoroutineEx
 
     public sealed class CoroutineTask : CoroutineTaskBase<CoroutineTask.ExecutionControl>
     {
+        public static CoroutineTask CompletedTask => new() { State = CoroutineTaskState.RanToCompletion };
+        
         public sealed class ExecutionControl : ExecutionControlBase
         {
             /// <summary>
@@ -132,6 +136,8 @@ namespace Rayleigh.CoroutineEx
             }
         }
 
+        private CoroutineTask() { }
+        
         public CoroutineTask(Sequence sequence) : base(sequence) { }
 
         public static CoroutineTask Run(Sequence sequence)
@@ -153,6 +159,19 @@ namespace Rayleigh.CoroutineEx
                 while(beginning + delay > DateTime.UtcNow) yield return null;
             }
         }
+
+        public static CoroutineTask FromCancelled() => new() { State = CoroutineTaskState.Canceled };
+
+        public static CoroutineTask<T> FromCancelled<T>() => new() { State = CoroutineTaskState.Canceled };
+
+        public static CoroutineTask FromException(Exception exception) =>
+            new() { State = CoroutineTaskState.Faulted, Exception = exception };
+        
+        public static CoroutineTask<T> FromException<T>(Exception exception) =>
+            new() { State = CoroutineTaskState.Faulted, Exception = exception };
+
+        public static CoroutineTask<T> FromResult<T>(T result) =>
+            new() { State = CoroutineTaskState.RanToCompletion, result = result };
     }
 
     public class CoroutineTask<TResult> : CoroutineTaskBase<CoroutineTask<TResult>.ExecutionControl>
@@ -179,7 +198,7 @@ namespace Rayleigh.CoroutineEx
             }
         }
 
-        private TResult result;
+        internal TResult result;
 
         public TResult Result
         {
@@ -192,6 +211,8 @@ namespace Rayleigh.CoroutineEx
             }
         }
 
+        internal CoroutineTask() { }
+        
         public CoroutineTask(Sequence sequence) : base(sequence) { }
 
         public static CoroutineTask<TResult> Run(Sequence sequence)
