@@ -7,5 +7,13 @@
   "dependencies": {
     "com.unity.editorcoroutines": "1.0.0"
   },
-  "keywords": ["coroutine", "task"]
+  "keywords": [
+    "coroutine",
+    "task"
+  ],
+  "author": {
+    "name": "Vladyslav Pashaiev",
+    "email": "rayleigh@protonmail.com",
+    "url": "https://github.com/s-rayleigh"
+  }
 }
