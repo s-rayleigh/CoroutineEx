@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -394,6 +395,16 @@ namespace Rayleigh.CoroutineEx.Tests
             Assert.That(task.Result, Is.EqualTo(result));
 
             yield return task;
+        }
+
+        [UnityTest]
+        public IEnumerator Delay()
+        {
+            var ts = TimeSpan.FromSeconds(.3d);
+            var stopwatch = Stopwatch.StartNew();
+            yield return CoroutineTask.Delay(ts);
+            stopwatch.Stop();
+            Assert.That(stopwatch.Elapsed, Is.EqualTo(ts).Within(TimeSpan.FromSeconds(0.01d)));
         }
     }
 }
