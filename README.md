@@ -2,6 +2,13 @@
 This library aims to provide a more convenient and feature rich abstraction for coroutine-based asynchronous 
 operations in Unity 3D and also attempts to replicate the TAP design pattern and `Task` class from .NET.
 
+# Features
+- Allows for precise control over the execution sequence.
+- Offers multiple task states.
+- Provides a way to return a value from the task.
+- Works in Editor scripts.
+- Replicates some features from the TAP.
+
 # Installation
 Add the package to your project via [UPM](https://docs.unity3d.com/Manual/upm-ui-giturl.html) using this link:
 https://github.com/s-rayleigh/CoroutineEx.git
@@ -20,8 +27,8 @@ https://github.com/s-rayleigh/CoroutineEx.git
 | `Task.FromResult`        | `CoroutineTask.FromResult`        |
 | `Task.Exception`         | `CoroutineTask.Exception`         |
 | `Task.Status`            | `CoroutineTask.State`             |
-| `Task.WhenAll`           | `Helpers.WhenAll`                 |
-| `Task.WhenAny`           | `Helpers.WhenAny`                 |
+| `Task.WhenAll`           | `CoroutineTask.WhenAll`           |
+| `Task.WhenAny`           | `CoroutineTask.WhenAny`           |
 | `await`                  | `yield return`                    |
 | `lock` or `AsyncLock`    | `CoroutineLock`                   |
 | `TaskCompletionSource`   | `CoroutineTaskCompletionSource`   |
@@ -62,10 +69,3 @@ var task = CoroutineTask<int>.Run(ctl =>
 yield return task;
 Debug.Log(task.Result);
 ```
-
-# TODO
-- [ ] Move `Helpers.WhenAll` and `Helpers.WhenAny` to `CoroutineTask` class
-- [ ] `CancellationToken` support for `CoroutineTask.Run` and `CoroutineTask.Delay`
-- [ ] Exception bubbling
-- [ ] OpenUPM package
-- [ ] Docs (for now, use the tests as an example)
