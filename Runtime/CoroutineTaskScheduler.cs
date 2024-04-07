@@ -19,7 +19,7 @@ namespace Rayleigh.CoroutineEx
         [PublicAPI]
         public CoroutineTaskScheduler(ICoroutineOwner coroutineOwner) => this.coroutineOwner = coroutineOwner;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RuntimeInit() =>
             runtimeDefault = new CoroutineTaskScheduler(RuntimeCoroutineOwner.Create());
 
