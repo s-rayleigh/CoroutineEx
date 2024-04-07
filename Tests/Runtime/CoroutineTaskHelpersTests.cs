@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using static Rayleigh.CoroutineEx.Helpers;
 
 namespace Rayleigh.CoroutineEx.Tests
 {
@@ -33,7 +32,7 @@ namespace Rayleigh.CoroutineEx.Tests
                 }));
             }
 
-            var whenAllTask = WhenAll(list);
+            var whenAllTask = CoroutineTask.WhenAll(list);
             yield return whenAllTask;
 
             Assert.That(whenAllTask.State, Is.EqualTo(CoroutineTaskState.RanToCompletion));
@@ -74,7 +73,7 @@ namespace Rayleigh.CoroutineEx.Tests
                 }
             });
 
-            var whenAnyTask = WhenAny(quickTask, avgTask, longTask);
+            var whenAnyTask = CoroutineTask.WhenAny(quickTask, avgTask, longTask);
 
             quickTask.Start();
             avgTask.Start();

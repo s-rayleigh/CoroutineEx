@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Rayleigh.CoroutineEx
@@ -147,19 +148,6 @@ namespace Rayleigh.CoroutineEx
             return task;
         }
 
-        public static CoroutineTask Delay(TimeSpan delay)
-        {
-            if(delay <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(delay));
-
-            return Run(_ => Internal());
-
-            IEnumerator Internal()
-            {
-                var beginning = DateTime.UtcNow;
-                while(beginning + delay > DateTime.UtcNow) yield return null;
-            }
-        }
-
         public static CoroutineTask FromCancelled() => new() { State = CoroutineTaskState.Canceled };
 
         public static CoroutineTask<T> FromCancelled<T>() => new() { State = CoroutineTaskState.Canceled };
@@ -172,6 +160,144 @@ namespace Rayleigh.CoroutineEx
 
         public static CoroutineTask<T> FromResult<T>(T result) =>
             new() { State = CoroutineTaskState.RanToCompletion, result = result };
+        
+        public static CoroutineTask Delay(TimeSpan delay)
+        {
+            if(delay <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(delay));
+
+            return Run(_ => Internal());
+
+            IEnumerator Internal()
+            {
+                var beginning = DateTime.UtcNow;
+                while(beginning + delay > DateTime.UtcNow) yield return null;
+            }
+        }
+        
+        public static CoroutineTask WhenAll(params IEnumerator[] tasks) => WhenAll((IEnumerable<IEnumerator>)tasks);
+
+        public static CoroutineTask WhenAll(IEnumerable<IEnumerator> tasks) => Run(_ =>
+        {
+            if(tasks is null) throw new ArgumentNullException(nameof(tasks));
+            return Internal();
+
+            IEnumerator Internal()
+            {
+                foreach(var task in tasks) yield return task;
+            }
+        });
+
+        public static CoroutineTask<CoroutineWrapper> WhenAny(IEnumerable<CoroutineWrapper> tasks)
+        {
+            if(tasks is CoroutineWrapper[] tasksArray) return WhenAny(tasksArray);
+            if(tasks is null) throw new ArgumentNullException(nameof(tasks));
+
+            var copy = new List<CoroutineWrapper>(tasks);
+
+            for(var i = 0; i < copy.Count; i++)
+            {
+                if(copy[i] is null) throw new ArgumentException("Task cannot be null.", nameof(tasks));
+            }
+
+            return CoroutineTask<CoroutineWrapper>.Run(ctl =>
+            {
+                return Internal();
+
+                IEnumerator Internal()
+                {
+                    while(true)
+                    {
+                        for(var i = 0; i < copy.Count; i++)
+                        {
+                            if(copy[i].keepWaiting) continue;
+                            ctl.SetResult(copy[i]);
+                            yield break;
+                        }
+
+                        yield return null;
+                    }
+                }
+            });
+        }
+
+        public static CoroutineTask<CoroutineWrapper> WhenAny(params CoroutineWrapper[] tasks)
+        {
+            if(tasks is null) throw new ArgumentNullException(nameof(tasks));
+
+            var copy = new CoroutineWrapper[tasks.Length];
+
+            for(var i = 0; i < tasks.Length; i++)
+            {
+                if(tasks[i] is null) throw new ArgumentException("Task cannot be null", nameof(tasks));
+                copy[i] = tasks[i];
+            }
+
+            return CoroutineTask<CoroutineWrapper>.Run(ctl =>
+            {
+                return Internal();
+
+                IEnumerator Internal()
+                {
+                    while(true)
+                    {
+                        for(var i = 0; i < copy.Length; i++)
+                        {
+                            if(copy[i].keepWaiting) continue;
+                            ctl.SetResult(copy[i]);
+                            yield break;
+                        }
+
+                        yield return null;
+                    }
+                }
+            });
+        }
+
+        public static CoroutineTask TransitionBySpeed(Action<float> onSet, float from = 0f, float to = 1f,
+            float speed = 7f, Action onEnd = default, float threshold = 0.0001f)
+        {
+            return onSet is null ? CompletedTask : Run(_ => Internal());
+
+            IEnumerator Internal()
+            {
+                var t = 0f;
+                var value = from;
+
+                while(!FastApproximately(value, to, threshold))
+                {
+                    value = Mathf.Lerp(from, to, t);
+                    onSet(value);
+                    t += speed * Time.deltaTime;
+                    yield return null;
+                }
+
+                onSet(to);
+                onEnd?.Invoke();
+            }
+        }
+        
+        private static CoroutineTask TransitionByTime(Action<float> onSet, float from = 0f, float to = 1f,
+            float time = 1f, Action onEnd = default)
+        {
+            return onSet is null ? CompletedTask : Run(_ => Internal());
+            
+            IEnumerator Internal()
+            {
+                var perSecond = (from - to) / time;
+                
+                for (var val = from; val <= to; val += perSecond * Time.deltaTime)
+                {
+                    yield return null;
+                    onSet(val);
+                }
+        
+                onSet(to);
+                onEnd?.Invoke();
+            }
+        }
+        
+        private static bool FastApproximately(float a, float b, float threshold) =>
+            (a - b < 0 ? b - a : a - b) <= threshold;
     }
 
     public class CoroutineTask<TResult> : CoroutineTaskBase<CoroutineTask<TResult>.ExecutionControl>
