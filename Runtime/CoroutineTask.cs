@@ -283,7 +283,7 @@ namespace Rayleigh.CoroutineEx
             
             IEnumerator Internal()
             {
-                var perSecond = (from - to) / time;
+                var perSecond = (to - from) / time;
                 
                 for (var val = from; val <= to; val += perSecond * Time.deltaTime)
                 {
