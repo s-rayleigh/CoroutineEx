@@ -276,7 +276,7 @@ namespace Rayleigh.CoroutineEx
             }
         }
         
-        private static CoroutineTask TransitionByTime(Action<float> onSet, float from = 0f, float to = 1f,
+        public static CoroutineTask TransitionByTime(Action<float> onSet, float from = 0f, float to = 1f,
             float time = 1f, Action onEnd = default)
         {
             return onSet is null ? CompletedTask : Run(_ => Internal());
