@@ -12,8 +12,11 @@ operations in Unity 3D and also attempts to replicate the TAP design pattern and
 - Replicates some features from the TAP.
 
 # Installation
-Add the package to your project via [UPM](https://docs.unity3d.com/Manual/upm-ui-giturl.html) using this link:
-https://github.com/s-rayleigh/CoroutineEx.git
+Follow the guide by [this link](https://openupm.com/packages/com.rayleigh.coroutineex/#modal-manualinstallation) to
+install the package using OpenUPM (recommended).
+
+Or you can add the package to your project via [UPM](https://docs.unity3d.com/Manual/upm-ui-giturl.html) using
+this Git URL: https://github.com/s-rayleigh/CoroutineEx.git
 
 # System.Threading.Task vs CoroutineTask
 
