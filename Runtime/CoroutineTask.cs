@@ -113,8 +113,13 @@ namespace Rayleigh.CoroutineEx
         public sealed class ExecutionControl : ExecutionControlBase
         {
             /// <summary>
-            /// <para>Forcibly ends the sequence execution and sets the <see cref="CoroutineTaskState.RanToCompletion"/> state.</para>
-            /// <para>Does nothing if the current state is not <see cref="CoroutineTaskState.Running"/> or <see cref="CoroutineTaskState.Created"/>.</para>
+            /// <para>
+            /// Forcibly ends the sequence execution and sets the <see cref="CoroutineTaskState.RanToCompletion"/> state.
+            /// </para>
+            /// <para>
+            /// Does nothing if the current state is not <see cref="CoroutineTaskState.Running"/> or
+            /// <see cref="CoroutineTaskState.Created"/>.
+            /// </para>
             /// </summary>
             public void Finish()
             {
@@ -125,8 +130,13 @@ namespace Rayleigh.CoroutineEx
             }
 
             /// <summary>
-            /// <para>Forcibly ends the sequence execution and sets the <see cref="CoroutineTaskState.Faulted"/> state.</para>
-            /// <para>Does nothing if the current state is not <see cref="CoroutineTaskState.Running"/> or <see cref="CoroutineTaskState.Created"/>.</para>
+            /// <para>
+            /// Forcibly ends the sequence execution and sets the <see cref="CoroutineTaskState.Faulted"/> state.
+            /// </para>
+            /// <para>
+            /// Does nothing if the current state is not <see cref="CoroutineTaskState.Running"/> or
+            /// <see cref="CoroutineTaskState.Created"/>.
+            /// </para>
             /// </summary>
             public void Fail()
             {
@@ -161,6 +171,14 @@ namespace Rayleigh.CoroutineEx
         public static CoroutineTask<T> FromResult<T>(T result) =>
             new() { State = CoroutineTaskState.RanToCompletion, result = result };
         
+        /// <summary>
+        /// Creates a coroutine task that will complete after a time delay.
+        /// </summary>
+        /// <param name="delay">The <see cref="TimeSpan"/> to wait before completing the returned task.</param>
+        /// <returns>A coroutine task that represents the time delay.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <see cref="delay"/> represents a negative time interval.
+        /// </exception>
         public static CoroutineTask Delay(TimeSpan delay)
         {
             if(delay <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(delay));
@@ -174,6 +192,11 @@ namespace Rayleigh.CoroutineEx
             }
         }
         
+        /// <summary>
+        /// Creates a coroutine task that will complete when all of the supplied yield instructions have completed.
+        /// </summary>
+        /// <param name="tasks">The instructions to wait on for completion.</param>
+        /// <returns>A task that represents the completion of all of the yield instructions.</returns>
         public static CoroutineTask WhenAll(params IEnumerator[] tasks) => WhenAll((IEnumerable<IEnumerator>)tasks);
 
         public static CoroutineTask WhenAll(IEnumerable<IEnumerator> tasks) => Run(_ =>
@@ -187,6 +210,11 @@ namespace Rayleigh.CoroutineEx
             }
         });
 
+        /// <summary>
+        /// Creates a coroutine task that will complete when all of the supplied coroutine tasks have completed.
+        /// </summary>
+        /// <param name="tasks">The coroutine tasks to wait on for completion.</param>
+        /// <returns>A task that represents the completion of all of the coroutine tasks.</returns>
         public static CoroutineTask<CoroutineWrapper> WhenAny(IEnumerable<CoroutineWrapper> tasks)
         {
             if(tasks is CoroutineWrapper[] tasksArray) return WhenAny(tasksArray);
@@ -220,6 +248,17 @@ namespace Rayleigh.CoroutineEx
             });
         }
 
+        /// <summary>
+        /// Creates a coroutine task that will complete when any of the supplied coroutine tasks have completed.
+        /// </summary>
+        /// <param name="tasks">The coroutine tasks to wait on for completion.</param>
+        /// <returns>A coroutine task that represents the completion of one of the supplied coroutine tasks.
+        /// The return coroutine task's <see cref="CoroutineTask{TResult}.Result"/> is the coroutine task
+        /// that completed.</returns>
+        /// <exception cref="ArgumentNullException">The <see cref="tasks"/> argument was null.</exception>
+        /// <exception cref="ArgumentException">
+        /// The <see cref="tasks"/> array contained a null task, or was empty.
+        /// </exception>
         public static CoroutineTask<CoroutineWrapper> WhenAny(params CoroutineWrapper[] tasks)
         {
             if(tasks is null) throw new ArgumentNullException(nameof(tasks));
@@ -253,6 +292,17 @@ namespace Rayleigh.CoroutineEx
             });
         }
 
+        /// <summary>
+        /// Transitions float value in the range defined by the <see cref="from"/> and <see cref="to"/> arguments with
+        /// the specified <see cref="speed"/>.
+        /// </summary>
+        /// <param name="onSet">Setter for the value.</param>
+        /// <param name="from">Value from which a transition starts.</param>
+        /// <param name="to">Value at which a transition ends.</param>
+        /// <param name="speed">Speed of the transition defined as a value change per second.</param>
+        /// <param name="onEnd">Callback to be called at the end of the transition.</param>
+        /// <param name="threshold">Precision used to determine the value reached the end of the transition.</param>
+        /// <returns>Coroutine task to wait for the end of the transition.</returns>
         public static CoroutineTask TransitionBySpeed(Action<float> onSet, float from = 0f, float to = 1f,
             float speed = 7f, Action onEnd = default, float threshold = 0.0001f)
         {
@@ -276,6 +326,16 @@ namespace Rayleigh.CoroutineEx
             }
         }
         
+        /// <summary>
+        /// Transitions float value in the range defined by the <see cref="from"/> and <see cref="to"/> arguments during
+        /// the specified <see cref="time"/>.
+        /// </summary>
+        /// <param name="onSet">Setter for the value.</param>
+        /// <param name="from">Value from which a transition starts.</param>
+        /// <param name="to">Value at which a transition ends.</param>
+        /// <param name="time">Duration of the transition in seconds.</param>
+        /// <param name="onEnd">Callback to be called at the end of the transition.</param>
+        /// <returns>Coroutine task to wait for the end of the transition.</returns>
         public static CoroutineTask TransitionByTime(Action<float> onSet, float from = 0f, float to = 1f,
             float time = 1f, Action onEnd = default)
         {
