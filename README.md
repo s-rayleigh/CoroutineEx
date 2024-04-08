@@ -1,4 +1,6 @@
 # CoroutineEx
+[![openupm](https://img.shields.io/npm/v/com.rayleigh.coroutineex?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.rayleigh.coroutineex/)
+
 This library aims to provide a more convenient and feature rich abstraction for coroutine-based asynchronous 
 operations in Unity 3D and also attempts to replicate the TAP design pattern and `Task` class from .NET.
 
