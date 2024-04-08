@@ -1,6 +1,6 @@
 {
   "name": "com.rayleigh.coroutineex",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "CoroutineEx",
   "description": "An abstraction over Unity coroutines that behaves similarly to Tasks in C#.",
   "type": "library",
