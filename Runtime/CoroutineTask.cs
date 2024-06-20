@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace Rayleigh.CoroutineEx
@@ -170,16 +171,17 @@ namespace Rayleigh.CoroutineEx
 
         public static CoroutineTask<T> FromResult<T>(T result) =>
             new() { State = CoroutineTaskState.RanToCompletion, result = result };
-        
+
         /// <summary>
         /// Creates a coroutine task that will complete after a time delay.
         /// </summary>
         /// <param name="delay">The <see cref="TimeSpan"/> to wait before completing the returned task.</param>
+        /// <param name="cancellationToken">Cancellation token that can be used to cancel this coroutine task.</param>
         /// <returns>A coroutine task that represents the time delay.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <see cref="delay"/> represents a negative time interval.
         /// </exception>
-        public static CoroutineTask Delay(TimeSpan delay)
+        public static CoroutineTask Delay(TimeSpan delay, CancellationToken cancellationToken = default)
         {
             if(delay <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(delay));
 
@@ -188,7 +190,11 @@ namespace Rayleigh.CoroutineEx
             IEnumerator Internal()
             {
                 var beginning = DateTime.UtcNow;
-                while(beginning + delay > DateTime.UtcNow) yield return null;
+                while (beginning + delay > DateTime.UtcNow)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    yield return null;
+                }
             }
         }
         
@@ -302,9 +308,11 @@ namespace Rayleigh.CoroutineEx
         /// <param name="speed">Speed of the transition defined as a value change per second.</param>
         /// <param name="onEnd">Callback to be called at the end of the transition.</param>
         /// <param name="threshold">Precision used to determine the value reached the end of the transition.</param>
+        /// <param name="cancellationToken">Cancellation token that can be used to cancel this coroutine task.</param>
         /// <returns>Coroutine task to wait for the end of the transition.</returns>
         public static CoroutineTask TransitionBySpeed(Action<float> onSet, float from = 0f, float to = 1f,
-            float speed = 7f, Action onEnd = default, float threshold = 0.0001f)
+            float speed = 7f, Action onEnd = default, float threshold = 0.0001f, 
+            CancellationToken cancellationToken = default)
         {
             return onSet is null ? CompletedTask : Run(_ => Internal());
 
@@ -315,6 +323,7 @@ namespace Rayleigh.CoroutineEx
 
                 while(!FastApproximately(value, to, threshold))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     value = Mathf.Lerp(from, to, t);
                     onSet(value);
                     t += speed * Time.deltaTime;
@@ -325,7 +334,7 @@ namespace Rayleigh.CoroutineEx
                 onEnd?.Invoke();
             }
         }
-        
+
         /// <summary>
         /// Transitions float value in the range defined by the <see cref="from"/> and <see cref="to"/> arguments during
         /// the specified <see cref="time"/>.
@@ -335,9 +344,10 @@ namespace Rayleigh.CoroutineEx
         /// <param name="to">Value at which a transition ends.</param>
         /// <param name="time">Duration of the transition in seconds.</param>
         /// <param name="onEnd">Callback to be called at the end of the transition.</param>
+        /// <param name="cancellationToken">Cancellation token that can be used to cancel this coroutine task.</param>
         /// <returns>Coroutine task to wait for the end of the transition.</returns>
         public static CoroutineTask TransitionByTime(Action<float> onSet, float from = 0f, float to = 1f,
-            float time = 1f, Action onEnd = default)
+            float time = 1f, Action onEnd = default, CancellationToken cancellationToken = default)
         {
             return onSet is null ? CompletedTask : Run(_ => Internal());
             
@@ -347,6 +357,7 @@ namespace Rayleigh.CoroutineEx
                 
                 for (var val = from; val <= to; val += perSecond * Time.deltaTime)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     yield return null;
                     onSet(val);
                 }
