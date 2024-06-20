@@ -406,5 +406,58 @@ namespace Rayleigh.CoroutineEx.Tests
             stopwatch.Stop();
             Assert.That(stopwatch.Elapsed, Is.EqualTo(ts).Within(TimeSpan.FromSeconds(0.01d)));
         }
+
+        [UnityTest]
+        public IEnumerator ExceptionBubbling()
+        {
+            var exception = new Exception();
+            CoroutineTask innerTask = null;
+            var task = CoroutineTask.Run(_ =>
+            {
+                return Internal();
+                IEnumerator Internal()
+                {
+                    innerTask = CoroutineTask.Run(_ =>
+                    {
+                        return Internal2();
+                        IEnumerator Internal2() => throw exception;
+                    });
+                    yield return innerTask;
+                }
+            });
+
+            yield return task;
+
+            Assert.That(innerTask.State, Is.EqualTo(CoroutineTaskState.Faulted));
+            Assert.That(innerTask.Exception, Is.EqualTo(exception));
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Faulted));
+            Assert.That(task.Exception, Is.EqualTo(exception));
+        }
+
+        [UnityTest]
+        public IEnumerator CancellationBubbling()
+        {
+            CoroutineTask innerTask = null;
+            var task = CoroutineTask.Run(_ =>
+            {
+                return Internal();
+                IEnumerator Internal()
+                {
+                    innerTask = CoroutineTask.Run(_ =>
+                    {
+                        return Internal2();
+                        IEnumerator Internal2() => throw new TaskCanceledException();
+                    });
+                    yield return innerTask;
+                }
+            });
+
+            yield return task;
+
+            Assert.That(innerTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(innerTask.Exception, Is.Null);
+            Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(task.Exception, Is.Null);
+        }
     }
 }
