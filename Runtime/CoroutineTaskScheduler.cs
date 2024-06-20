@@ -31,6 +31,7 @@ namespace Rayleigh.CoroutineEx
         public void EnqueueTask(CoroutineWrapper.SchedulerControl ctl)
         {
             ctl.NotifyStarted(this.coroutineOwner.StartCoroutine(ControlSequence()));
+            return;
 
             IEnumerator ControlSequence()
             {
@@ -75,8 +76,24 @@ namespace Rayleigh.CoroutineEx
 
                     if(!next) break;
 
-                    // TODO: detect the CoroutineTask and handle it separately (instead of passing it to Unity)
-                    yield return enumerator.Current;
+                    var current = enumerator.Current;
+                    yield return current;
+                    
+                    // Bubble up the exception or cancellation.
+                    if(current is CoroutineWrapper coroutineWrapper)
+                    {
+                        if(coroutineWrapper.State is CoroutineTaskState.Canceled)
+                        {
+                            ctl.NotifyCanceled();
+                            yield break;
+                        }
+                        
+                        if (coroutineWrapper.Exception is not null)
+                        {
+                            ctl.NotifyException(coroutineWrapper.Exception);
+                            yield break;
+                        }
+                    }
                 }
 
                 ctl.NotifyCompletion();
