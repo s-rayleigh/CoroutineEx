@@ -459,5 +459,22 @@ namespace Rayleigh.CoroutineEx.Tests
             Assert.That(task.State, Is.EqualTo(CoroutineTaskState.Canceled));
             Assert.That(task.Exception, Is.Null);
         }
+
+        [UnityTest]
+        public IEnumerator DelayAndTransitionsCancel()
+        {
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(.25d));
+            var cancellationToken = cancellationTokenSource.Token;
+            var delayTask = CoroutineTask.Delay(TimeSpan.FromSeconds(5d), cancellationToken);
+            var transitionBySpeedTask = CoroutineTask.TransitionBySpeed(_ => { }, speed: .01f,
+                cancellationToken: cancellationToken);
+            var transitionByTimeTask = CoroutineTask.TransitionByTime(_ => { }, time: 5f,
+                cancellationToken: cancellationToken);
+            yield return CoroutineTask.WhenAll(delayTask, transitionBySpeedTask, transitionByTimeTask);
+
+            Assert.That(delayTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(transitionBySpeedTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
+            Assert.That(transitionByTimeTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
+        }
     }
 }
