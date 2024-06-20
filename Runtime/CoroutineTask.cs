@@ -354,8 +354,11 @@ namespace Rayleigh.CoroutineEx
             IEnumerator Internal()
             {
                 var perSecond = (to - from) / time;
-                
-                for (var val = from; val <= to; val += perSecond * Time.deltaTime)
+                var negativeDir = to < from;
+
+                for (var val = from;
+                     !negativeDir && val <= to || negativeDir && val >= to;
+                     val += perSecond * Time.deltaTime)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     yield return null;
