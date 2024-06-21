@@ -476,5 +476,34 @@ namespace Rayleigh.CoroutineEx.Tests
             Assert.That(transitionBySpeedTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
             Assert.That(transitionByTimeTask.State, Is.EqualTo(CoroutineTaskState.Canceled));
         }
+
+        [UnityTest]
+        public IEnumerator SuppressThrowing()
+        {
+            var cancelSuppressTask = CoroutineTask.Run(_ =>
+            {
+                return Internal();
+                IEnumerator Internal()
+                {
+                    yield return CoroutineTask.FromCancelled().ConfigureYield(true);
+                }
+            });
+
+            var exceptionSuppressTask = CoroutineTask.Run(_ =>
+            {
+                return Internal();
+                IEnumerator Internal()
+                {
+                    yield return CoroutineTask.FromException(new Exception()).ConfigureYield(true);
+                }
+            });
+
+            yield return cancelSuppressTask;
+            yield return exceptionSuppressTask;
+            
+            Assert.That(cancelSuppressTask.State, Is.EqualTo(CoroutineTaskState.RanToCompletion));
+            Assert.That(exceptionSuppressTask.State, Is.EqualTo(CoroutineTaskState.RanToCompletion));
+            Assert.That(exceptionSuppressTask.Exception, Is.Null);
+        }
     }
 }

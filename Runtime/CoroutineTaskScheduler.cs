@@ -80,7 +80,7 @@ namespace Rayleigh.CoroutineEx
                     yield return current;
                     
                     // Bubble up the exception or cancellation.
-                    if(current is CoroutineWrapper coroutineWrapper)
+                    if(current is CoroutineWrapper { SuppressThrowing: false } coroutineWrapper)
                     {
                         if(coroutineWrapper.State is CoroutineTaskState.Canceled)
                         {

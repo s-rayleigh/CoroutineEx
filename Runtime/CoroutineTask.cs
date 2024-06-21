@@ -23,6 +23,8 @@ namespace Rayleigh.CoroutineEx
 
         public Exception Exception { get; internal set; }
 
+        protected internal bool SuppressThrowing { get; protected set; }
+        
         public override bool keepWaiting => this.State is CoroutineTaskState.Created or CoroutineTaskState.Running;
 
         protected ICoroutineTaskScheduler scheduler;
@@ -60,7 +62,7 @@ namespace Rayleigh.CoroutineEx
         }
 
         protected abstract IEnumerator ExecuteSequence();
-
+        
         public void Cancel()
         {
             if(this.State is not (CoroutineTaskState.Running or CoroutineTaskState.Created)) return;
@@ -157,6 +159,19 @@ namespace Rayleigh.CoroutineEx
             var task = new CoroutineTask(sequence);
             task.Start();
             return task;
+        }
+        
+        /// <summary>
+        /// Configures executor used to execute this task.
+        /// </summary>
+        /// <param name="suppressThrowing">
+        /// If set to true, avoids throwing an exception at the completion of yielding a coroutine task that ends
+        /// in the Faulted or Canceled state.
+        /// </param>
+        public CoroutineTask ConfigureYield(bool suppressThrowing)
+        {
+            SuppressThrowing = suppressThrowing;
+            return this;
         }
 
         public static CoroutineTask FromCancelled() => new() { State = CoroutineTaskState.Canceled };
@@ -420,6 +435,19 @@ namespace Rayleigh.CoroutineEx
             var task = new CoroutineTask<TResult>(sequence);
             task.Start();
             return task;
+        }
+        
+        /// <summary>
+        /// Configures executor used to execute this task.
+        /// </summary>
+        /// <param name="suppressThrowing">
+        /// If set to true, avoids throwing an exception at the completion of yielding a coroutine task that ends
+        /// in the Faulted or Canceled state.
+        /// </param>
+        public CoroutineTask<TResult> ConfigureYield(bool suppressThrowing)
+        {
+            SuppressThrowing = suppressThrowing;
+            return this;
         }
     }
 }
